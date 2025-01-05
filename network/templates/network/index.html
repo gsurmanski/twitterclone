@@ -1,0 +1,25 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block body %}
+<div class="section">
+    <h2>New Post</h2>
+    <form id="newpost" method="post">
+        {% csrf_token %}
+        {{ form.as_p }}  <!-- This renders the form fields as <p> elements -->
+        <button class="btn btn-primary" type="submit">New Post</button>
+    </form>
+</div>
+<div id="response">
+</div>
+
+<div class="section">
+    <h2>All Posts</h2>
+    <div id="allposts">
+    </div>
+</div>
+{% endblock %}
+
+{% block script %}
+    <script src="{% static 'network/frontend.js' %}"></script>
+{% endblock %}

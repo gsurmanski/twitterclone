@@ -1,0 +1,26 @@
+textarea {
+    height: 50px;
+}
+
+.section {
+    border: 1px solid #F1F1F1;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+#response {
+    display: none;
+}
+
+.post {
+    border: 1px solid #F1F1F1;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 10px;
+    opacity: 0;
+    transition: opacity 1s ease;
+}
+.user {
+    font-weight: bold;
+}
