@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
@@ -7,11 +8,13 @@ from django.shortcuts import render
 from django.urls import reverse
 from .forms import *
 from django.http import JsonResponse
+import json
 
 
 #import models
 from .models import User
 from .models import Post
+from .models import Like
 
 
 def index(request):
@@ -96,6 +99,49 @@ def new_post(request):
         form = NewPost()
 
 def get_posts(request):
-    posts = Post.objects.all().order_by('-date')
+    #check filter param
+    # Get the 'filter' query parameter from the URL, defaulting to 'all' if not present
+    filter_value = request.GET.get('filter', 'all')
+
+    # If the 'filter' is not 'all', filter by the user
+    if filter_value != 'all':
+        #user double underscore user__username to query over Post model back to User model since field "user" is foreign key in Post model
+        posts = Post.objects.filter(user__username=filter_value).order_by('-date')  # Filtering by the username
+    else:
+        posts = Post.objects.all().order_by('-date')  # Fetch all posts if filter is 'all'
     
     return JsonResponse([post.serialize() for post in posts], safe=False) #convert queryset to list
+
+def posts(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"success": False, "message": "need to be logged in"}, status=401)
+    if request.method == "PUT":
+        #load data into dictionary
+        data = json.loads(request.body)
+        #if like update sent
+        if data.get("like")==True:
+            #check if post exists
+            try:
+                #use get to retrieve actual post, rather then filter which retrieves a queryset
+                post = Post.objects.get(id=data.get("id"))
+            except Post.DoesNotExist:
+                return JsonResponse({"success": False, "message": "post doesn't exist"}, status=404)
+            #check if user has liked the post
+            if Like.objects.filter(user=request.user, post=post).exists():
+                return JsonResponse({"success": False, "message": "you liked the post already"}, status=400)
+            
+            #put like in db and update post like number
+            Like.objects.create(user=request.user, post=post)
+            post.likes += 1
+            post.save()
+            
+            
+            return JsonResponse({"success": True, "message": "it worked"}, status=200)
+
+def profile(request, username):
+    #username passed via url/GET
+    #query User database for all relevant info, including following and followers
+    user = User.objects.get(username=username)
+
+    #pass info to page as dictionary
+    return render(request, "network/profile.html", {"profile" : user})
