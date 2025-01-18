@@ -20,12 +20,14 @@ function assemble_post(post, position = 'append') {
     //create post components
     //hold container
     const entry = document.createElement('div');
-    entry.className = "post"
+    entry.className = "post";
     
     //components
-    const user = document.createElement('div');
-    user.className = "user"
+    const user = document.createElement('a');
+    user.className = "user";
+    user.href = `/profile/${post.user}?filter=${post.user}`;
     user.textContent = post.user;
+    
 
     const content = document.createElement('div');
     content.textContent = post.post;
@@ -64,7 +66,8 @@ function assemble_post(post, position = 'append') {
         .then(data => {
             if (data.success) {
                 //update likes on success
-                like_number.textContent = 'likes: ' + (post.likes + 1);
+                like_number.textContent = 'likes: ' + (data.likes);
+               
                 console.log(data);
             }
             else {

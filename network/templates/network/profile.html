@@ -2,16 +2,16 @@
 {% load static %}
 
 {% block body %}
-
-    {{ profile.username }}
-    {{ profile.id }}
-
-    {% if user.is_authenticated %}
-        <button id="follow" user="{{ user }}" follow="profile.username">Follow</button>
-    {% endif %}
-
+    <div class="user_section">
+        <h1>{{ profile.username }}</h1>
+        <p>Followers</p>
+        <p>Following</p>
+        {% if user.is_authenticated and profile.username != user.username %}
+            <button id="follow" class="btn btn-primary" user="{{ user }}" follow="profile.username">Follow</button>
+        {% endif %}
+    </div>
     <div class="section">
-        <h2>All Posts</h2>
+        <h2>Posts</h2>
         <div id="allposts">
         </div>
     </div>

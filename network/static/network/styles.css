@@ -9,6 +9,14 @@ textarea {
     border-radius: 10px;
 }
 
+.user_section {
+    border: 1px solid #F1F1F1;
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: #F1F1F1;
+}
+
 #response {
     display: none;
 }
@@ -21,6 +29,7 @@ textarea {
     opacity: 0;
     transition: opacity 1s ease;
 }
+
 .user {
     font-weight: bold;
 }

@@ -128,15 +128,20 @@ def posts(request):
                 return JsonResponse({"success": False, "message": "post doesn't exist"}, status=404)
             #check if user has liked the post
             if Like.objects.filter(user=request.user, post=post).exists():
-                return JsonResponse({"success": False, "message": "you liked the post already"}, status=400)
+                #delete like in db and update post like number (retrieved above)
+                Like.objects.filter(user=request.user, post=post).delete()
+                post.likes -= 1
+                post.save()
+                
+                return JsonResponse({"success": True, "likes": post.likes, "message": "unliked"}, status=200)
+            else:
+                #put like in db and update post like number
+                Like.objects.create(user=request.user, post=post)
+                post.likes += 1
+                post.save()
             
-            #put like in db and update post like number
-            Like.objects.create(user=request.user, post=post)
-            post.likes += 1
-            post.save()
             
-            
-            return JsonResponse({"success": True, "message": "it worked"}, status=200)
+                return JsonResponse({"success": True, "likes": post.likes, "message": "it worked"}, status=200)
 
 def profile(request, username):
     #username passed via url/GET
