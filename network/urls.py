@@ -12,6 +12,7 @@ urlpatterns = [
     
     # API Routes
     path("new_post", views.new_post, name="newpost"),
-    path("posts", views.posts, name="posts"),
-    path("get_posts", views.get_posts, name="get_posts")
+    path("posts", views.api_posts, name="posts"),
+    path("get_posts", views.get_posts, name="get_posts"),
+    path('api_profile', views.api_profile, name='api_profile')  # Profile without a username specified
 ]

@@ -4,10 +4,10 @@
 {% block body %}
     <div class="user_section">
         <h1>{{ profile.username }}</h1>
-        <p>Followers</p>
-        <p>Following</p>
+        <p>Followers: {{ followers }}</p>
+        <p>Following: {{ following }}</p>
         {% if user.is_authenticated and profile.username != user.username %}
-            <button id="follow" class="btn btn-primary" user="{{ user }}" follow="profile.username">Follow</button>
+            <button id="follow" class="btn btn-primary" user="{{ user }}" follow="{{ profile.username }}">{{ button }}</button>
         {% endif %}
     </div>
     <div class="section">
@@ -19,4 +19,5 @@
 
 {% block script %}
     <script src="{% static 'network/postfrontend.js' %}"></script>
+    <script src="{% static 'network/profile.js' %}"></script>
 {% endblock %}

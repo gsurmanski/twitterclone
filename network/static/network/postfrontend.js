@@ -23,6 +23,10 @@ function assemble_post(post, position = 'append') {
     entry.className = "post";
     
     //components
+    const date_holder = document.createElement('div');
+    date_holder.className = "date";
+    date_holder.textContent = date;
+
     const user = document.createElement('a');
     user.className = "user";
     user.href = `/profile/${post.user}?filter=${post.user}`;
@@ -32,15 +36,57 @@ function assemble_post(post, position = 'append') {
     const content = document.createElement('div');
     content.textContent = post.post;
 
-    const date_holder = document.createElement('div');
-    date_holder.textContent = date;
-
-    const like_number = document.createElement('div');
-    like_number.textContent = 'likes: ' + post.likes;
-    like_number.className = "like";
-
     const like_button = document.createElement('button');
-    like_button.textContent = "❤️";
+    like_button.textContent = "❤️ " + post.likes;
+    like_button.className = "like";
+
+    
+    const edit_button = document.createElement('a');
+    edit_button.textContent = "edit";
+    edit_button.className = "edit";
+
+    //check if logged in for front end edit button functionality
+    if (isLoggedIn && post.user === currentUser) {
+        //create event listener for edit button...
+        edit_button.addEventListener('click', () => {
+            //check for existing edit area so can be removed
+            const existingArea = entry.querySelector('textarea');
+            const existing_submit_button = entry.querySelector('.submit_edit');
+
+            //if not existing, create everything necessary for edting
+            if (!existingArea){
+                //create text area
+                const text_edit = document.createElement('textarea');
+                text_edit.textContent = post.post;
+            
+                //create submit
+                const submit_button = document.createElement('button');
+                submit_button.textContent = "Submit";
+                submit_button.className = "submit_edit"
+
+                entry.append(text_edit);
+                entry.append(submit_button);
+
+                //set up event listener for form submission
+                submit_button.addEventListener('click', () => {
+                    alert('test');
+                    /*
+                    fetch('/posts', {
+
+                    }).then()
+                    */
+                });
+            }
+            else {
+                existingArea.remove();
+                existing_submit_button.remove();
+            }
+        });
+    }
+    else {
+        //otherwise show no edit button
+        edit_button.style.display = 'none';
+    }
 
     //create event listener for like button
     like_button.addEventListener('click', () => {
@@ -66,7 +112,7 @@ function assemble_post(post, position = 'append') {
         .then(data => {
             if (data.success) {
                 //update likes on success
-                like_number.textContent = 'likes: ' + (data.likes);
+                like_button.textContent = '❤️ ' + (data.likes);
                
                 console.log(data);
             }
@@ -77,7 +123,7 @@ function assemble_post(post, position = 'append') {
     });
 
     //assemble post
-    entry.append(user,content,date_holder,like_number,like_button);
+    entry.append(user,content,date_holder,like_button,edit_button);
 
     if (position === 'append'){
         document.querySelector("#allposts").appendChild(entry);

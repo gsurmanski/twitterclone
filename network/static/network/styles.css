@@ -2,6 +2,15 @@ textarea {
     height: 50px;
 }
 
+.edit {
+    color: #949494 !important;
+    cursor: pointer;
+    float: right;
+}
+.navbar {
+    border-radius: 10px;
+}
+
 .section {
     border: 1px solid #F1F1F1;
     margin-top: 15px;
@@ -32,4 +41,15 @@ textarea {
 
 .user {
     font-weight: bold;
+}
+
+.date {
+    font-style: italic;
+    font-size: 12px;
+}
+
+.like {
+    color: #767676;
+    border:1px solid #767676;
+    border-radius: 10px;
 }

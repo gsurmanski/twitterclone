@@ -15,6 +15,8 @@ import json
 from .models import User
 from .models import Post
 from .models import Like
+from .models import Follower
+
 
 
 def index(request):
@@ -112,7 +114,7 @@ def get_posts(request):
     
     return JsonResponse([post.serialize() for post in posts], safe=False) #convert queryset to list
 
-def posts(request):
+def api_posts(request):
     if not request.user.is_authenticated:
         return JsonResponse({"success": False, "message": "need to be logged in"}, status=401)
     if request.method == "PUT":
@@ -146,7 +148,56 @@ def posts(request):
 def profile(request, username):
     #username passed via url/GET
     #query User database for all relevant info, including following and followers
-    user = User.objects.get(username=username)
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        #if no user, just go back to index page
+        form = NewPost()
+        return render(request, "network/index.html", {"form": form})
 
-    #pass info to page as dictionary
-    return render(request, "network/profile.html", {"profile" : user})
+    #check if following user to render initial button
+    follow_check = Follower.objects.filter(follower=request.user, followed=user.id).exists()
+    button = ''
+    if follow_check:
+        button = 'Un-follow'
+    else:
+        button = 'Follow'
+
+    #get follower and follows counts
+    following = Follower.objects.filter(follower=user.id).count()
+    followers = Follower.objects.filter(followed=user.id).count()
+
+    return render(request, "network/profile.html", {"profile" : user, "button": button, "followers": followers,
+                                                    "following": following })
+
+def api_profile(request):
+    if request.method == "POST":
+        #first check if follow exists based on user passed and user logged in, if so, delete
+        try:
+            #load data into dictionary
+            data = json.loads(request.body)
+            user = data.get("user")
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+        
+        #check if followed username exists
+        try:
+            followed_user = User.objects.get(username=user)
+        except User.DoesNotExist:
+            return JsonResponse({"error": "user not found"}, status=404)
+        
+        #check if follow exists
+        follow = Follower.objects.filter(follower=request.user, followed=followed_user)
+
+        #already following
+        if follow.exists():
+            #delete follow from database
+            follow.delete()
+            return JsonResponse({"success": True, "button": "Follow"}, status=200)
+        else:
+            #create database follow
+            Follower.objects.create(follower=request.user, followed=followed_user)
+            return JsonResponse({"success": True, "button": "Un-Follow"}, status=200)
+
+    #if didn't trigger above, return false, not a valid request
+    return JsonResponse({"success" : False}, status=200)
