@@ -6,12 +6,19 @@
         <title>{% block title %}Social Network{% endblock %}</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
         <link href="{% static 'network/styles.css' %}" rel="stylesheet">
+
+        <!-- noto emoji font -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@300..700&display=swap" rel="stylesheet">
+
         <!-- csrf token for javascript fetch calls -->
         <meta name="csrf-token" content="{{ csrf_token }}">
         <script>
             // Pass django variables to JavaScript to check if the user is logged in and who
             let isLoggedIn = {% if user.is_authenticated %} true {% else %} false {% endif %};
             let currentUser = {% if user.is_authenticated %} "{{ user.username }}" {% else %} '' {% endif %};
+            let currentPageUrl = "{{ request.path }}";
         </script>
         {% block script %}
         {% endblock %}
@@ -19,7 +26,7 @@
     <body>
         <div class="container">
             <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <a class="navbar-brand" href="{% url 'index' %}">GreenSky</a>
+                <a class="navbar-brand" href="{% url 'index' %}"><img src="{% static 'network/greysky.png' %}" width="150" height="75"></a>
             
                 <div>
                 <ul class="navbar-nav mr-auto">
@@ -33,7 +40,7 @@
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Following</a>
+                            <a class="nav-link" href="{% url 'following' user.username %}">Following</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'logout' %}">Log Out</a>

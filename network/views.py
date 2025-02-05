@@ -24,6 +24,10 @@ def index(request):
 
     return render(request, "network/index.html", {"form": form})
 
+def following(request, username):
+
+    return render(request, "network/following.html")
+
 
 def login_view(request):
     if request.method == "POST":
@@ -100,20 +104,29 @@ def new_post(request):
     else:
         form = NewPost()
 
-def get_posts(request):
-    #check filter param
-    # Get the 'filter' query parameter from the URL, defaulting to 'all' if not present
+def get_posts(request, page, username):
+    # Get the 'filter' query parameter from the URL. Defaults to all
+    '''
+    not yet used
     filter_value = request.GET.get('filter', 'all')
+    '''
 
     # If the 'filter' is not 'all', filter by the user
-    if filter_value != 'all':
+    if page == "profile":
         #user double underscore user__username to query over Post model back to User model since field "user" is foreign key in Post model
-        posts = Post.objects.filter(user__username=filter_value).order_by('-date')  # Filtering by the username
-    else:
+        posts = Post.objects.filter(user__username=username).order_by('-date')  # Filtering by the username
+    elif page == "following":
+        # Get the users that the given username is following
+        following_users = Follower.objects.filter(follower__username=username).values_list('followed', flat=True)
+
+        # Get the posts made by the followed users, ordered by date
+        posts = Post.objects.filter(user__in=following_users).order_by('-date')
+    elif page == "index":
         posts = Post.objects.all().order_by('-date')  # Fetch all posts if filter is 'all'
     
     return JsonResponse([post.serialize() for post in posts], safe=False) #convert queryset to list
 
+@login_required
 def api_posts(request):
     if not request.user.is_authenticated:
         return JsonResponse({"success": False, "message": "need to be logged in"}, status=401)
@@ -141,9 +154,23 @@ def api_posts(request):
                 Like.objects.create(user=request.user, post=post)
                 post.likes += 1
                 post.save()
-            
-            
+
                 return JsonResponse({"success": True, "likes": post.likes, "message": "it worked"}, status=200)
+        #post edit request
+        elif data.get("body"):
+            #check if post exists
+            try:
+                #use get to retrieve actual post, rather then filter which retrieves a queryset
+                post = Post.objects.get(id=data.get("id"))
+            except Post.DoesNotExist:
+                return JsonResponse({"success": False, "message": "post doesn't exist"}, status=404)
+
+            #check if logged in user is owner of post
+            if request.user == post.user:
+                post.post = data.get("body")
+                post.save()
+
+                return JsonResponse({"success": True, "message": "yeah"}, status=200)
 
 def profile(request, username):
     #username passed via url/GET
@@ -169,7 +196,7 @@ def profile(request, username):
 
     return render(request, "network/profile.html", {"profile" : user, "button": button, "followers": followers,
                                                     "following": following })
-
+@login_required
 def api_profile(request):
     if request.method == "POST":
         #first check if follow exists based on user passed and user logged in, if so, delete

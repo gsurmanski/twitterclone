@@ -13,6 +13,7 @@ function getCSRFToken() {
     return document.querySelector('[name=csrf-token]').getAttribute('content');
 }
 
+//only prepend new posts, append initial load
 function assemble_post(post, position = 'append') {
     //format date received from database
     const date = format_date(post.date);
@@ -29,7 +30,7 @@ function assemble_post(post, position = 'append') {
 
     const user = document.createElement('a');
     user.className = "user";
-    user.href = `/profile/${post.user}?filter=${post.user}`;
+    user.href = `/profile/${post.user}`;
     user.textContent = post.user;
     
 
@@ -37,8 +38,8 @@ function assemble_post(post, position = 'append') {
     content.textContent = post.post;
 
     const like_button = document.createElement('button');
-    like_button.textContent = "❤️ " + post.likes;
-    like_button.className = "like";
+    like_button.textContent = "♥︎ " + post.likes;
+    like_button.className = "like noto-emoji";
 
     
     const edit_button = document.createElement('a');
@@ -57,27 +58,54 @@ function assemble_post(post, position = 'append') {
             if (!existingArea){
                 //create text area
                 const text_edit = document.createElement('textarea');
+                text_edit.className = "text_edit form-control";
                 text_edit.textContent = post.post;
             
                 //create submit
                 const submit_button = document.createElement('button');
                 submit_button.textContent = "Submit";
-                submit_button.className = "submit_edit"
+                submit_button.className = "submit_edit btn btn-primary"
 
                 entry.append(text_edit);
                 entry.append(submit_button);
 
                 //set up event listener for form submission
                 submit_button.addEventListener('click', () => {
-                    alert('test');
-                    /*
-                    fetch('/posts', {
-
-                    }).then()
-                    */
+                    fetch('/posts', { 
+                        method: "PUT", 
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken() // Include the CSRF token in the request header
+                        },
+                        body: JSON.stringify({
+                            id: post.id,
+                            body: text_edit.value
+                        })
+                      })
+                    .then(response => {
+                        if (response.status === 401){
+                            alert("you need to log in");
+                        }
+                        else {
+                           return response.json();
+                        }
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            //on success, clear form and update post
+                            content.textContent = text_edit.value;
+                            text_edit.remove();
+                            submit_button.remove();
+                            console.log(data);
+                        }
+                        else {
+                            alert(data.message)
+                        }
+                    });
                 });
             }
             else {
+                //remove if already exists
                 existingArea.remove();
                 existing_submit_button.remove();
             }
@@ -112,7 +140,7 @@ function assemble_post(post, position = 'append') {
         .then(data => {
             if (data.success) {
                 //update likes on success
-                like_button.textContent = '❤️ ' + (data.likes);
+                like_button.textContent = '♥︎ ' + (data.likes);
                
                 console.log(data);
             }
@@ -194,16 +222,16 @@ function load_posts(){
     // Get the value of 'param' from the URL query string
     const urlParams = new URLSearchParams(window.location.search);
     const filter = urlParams.get('filter');  // Retrieve the 'param' value
-    
+
     //declare let so it has scope outside of if and else below
     let url;
 
-    if (filter){
-        // if filter url variable exists
-        url = `/get_posts?filter=${encodeURIComponent(filter)}`;
+    //if on index page
+    if (currentPageUrl != '/'){
+        url = `/get_posts${currentPageUrl}?filter=${encodeURIComponent(filter)}`;
     }
     else {
-        url = `/get_posts?filter=all`;
+        url = `/get_posts/index/none?filter=${encodeURIComponent(filter)}`;
     }
 
     fetch(url, {

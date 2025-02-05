@@ -53,3 +53,15 @@ textarea {
     border:1px solid #767676;
     border-radius: 10px;
 }
+
+.text_edit {
+    margin: 5px 0 5px 0;
+}
+
+
+.noto-emoji {
+    font-family: "Noto Emoji", serif;
+    font-optical-sizing: auto;
+    font-style: normal;
+    font-weight: 500;
+  }
