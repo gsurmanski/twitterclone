@@ -38,7 +38,7 @@ function assemble_post(post, position = 'append') {
     content.textContent = post.post;
 
     const like_button = document.createElement('button');
-    like_button.textContent = "♥︎ " + post.likes;
+    like_button.textContent = "♥︎" + post.likes;
     like_button.className = "like noto-emoji";
 
     
@@ -222,27 +222,91 @@ function load_posts(){
     // Get the value of 'param' from the URL query string
     const urlParams = new URLSearchParams(window.location.search);
     const filter = urlParams.get('filter');  // Retrieve the 'param' value
+    const pageNumber = urlParams.get('page');
 
     //declare let so it has scope outside of if and else below
     let url;
 
-    //if on index page
+    //if NOT on index page
     if (currentPageUrl != '/'){
-        url = `/get_posts${currentPageUrl}?filter=${encodeURIComponent(filter)}`;
+        url = `/get_posts${currentPageUrl}?page=${pageNumber}&filter=${encodeURIComponent(filter)}`;
     }
     else {
-        url = `/get_posts/index/none?filter=${encodeURIComponent(filter)}`;
+        url = `/get_posts/index/none?page=${pageNumber}&filter=${encodeURIComponent(filter)}`;
     }
 
     fetch(url, {
         method: "GET"
     }).then(response => response.json())
-    .then(posts => {
-        posts.forEach(post => {
-        //place all posts    
-        assemble_post(post,'append');
-            
+    .then(data => {
+        data.posts.forEach(post => {
+            //place all posts    
+            assemble_post(post,'append');
         });
-        
+        //pass pagination JSON data to pagination function
+        pagination(data.pagination); 
     });
+}
+
+function pagination(pagination){
+    //pagination currently set to refresh page. For async pagination, utilize loadposts()
+    //create holder Unordered list
+    const page_change = document.createElement('ul');
+    page_change.className = "pagination";
+
+    //create previous button
+    if (pagination.has_previous === true) {
+        //holder list item
+        const previous = document.createElement('li');
+        previous.className = "page-item";
+
+        //link
+        const previous_link = document.createElement('a');
+        previous_link.textContent = "Previous";
+        previous_link.className = "page-link";
+        previous_link.href = `${currentPageUrl}?page=${pagination.page - 1}`
+
+        previous.append(previous_link);
+
+        page_change.append(previous);
+    }
+    
+    //create page numbers
+    for (let i=1; i <= pagination.num_pages; i++){
+        //holder list item
+        const page = document.createElement('li');
+        if (i === pagination.page){
+            page.className = "page-item active";
+        }
+        else {
+            page.className = "page-item";
+        }
+
+        //link
+        const page_link = document.createElement('a');
+        page_link.textContent = i;
+        page_link.className = "page-link";
+        page_link.href = `${currentPageUrl}?page=${i}`
+        page.append(page_link);
+
+        page_change.append(page);
+    }
+
+    //create next button if ncessary
+    if (pagination.has_next === true) {
+        //holder list item
+        const next = document.createElement('li');
+        next.className = "page-item";
+
+        //link
+        const next_link = document.createElement('a');
+        next_link.textContent = "Next";
+        next_link.className = "page-link";
+        next_link.href = `${currentPageUrl}?page=${pagination.page + 1}`
+
+        next.append(next_link);
+
+        page_change.append(next);
+    }
+    document.querySelector("#allposts").appendChild(page_change);
 }

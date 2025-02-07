@@ -17,6 +17,9 @@ from .models import Post
 from .models import Like
 from .models import Follower
 
+#import paginator
+from django.core.paginator import Paginator
+
 
 
 def index(request):
@@ -104,7 +107,7 @@ def new_post(request):
     else:
         form = NewPost()
 
-def get_posts(request, page, username):
+def get_posts(request, page_name, username):
     # Get the 'filter' query parameter from the URL. Defaults to all
     '''
     not yet used
@@ -112,19 +115,34 @@ def get_posts(request, page, username):
     '''
 
     # If the 'filter' is not 'all', filter by the user
-    if page == "profile":
+    if page_name == "profile":
         #user double underscore user__username to query over Post model back to User model since field "user" is foreign key in Post model
         posts = Post.objects.filter(user__username=username).order_by('-date')  # Filtering by the username
-    elif page == "following":
+    elif page_name == "following":
         # Get the users that the given username is following
         following_users = Follower.objects.filter(follower__username=username).values_list('followed', flat=True)
 
         # Get the posts made by the followed users, ordered by date
         posts = Post.objects.filter(user__in=following_users).order_by('-date')
-    elif page == "index":
+    elif page_name == "index":
         posts = Post.objects.all().order_by('-date')  # Fetch all posts if filter is 'all'
     
-    return JsonResponse([post.serialize() for post in posts], safe=False) #convert queryset to list
+    #only show results from current page. using django paginator module
+    page_number = request.GET.get('page', 1) #get page from url or default to 1
+    paginator = Paginator(posts, 10)  # 10 books per page
+    page_obj = paginator.get_page(page_number) #the queryset of current database objects
+
+    #pass queryset and page information back
+    posts = [post.serialize() for post in page_obj] #convert queryset to list
+    pagination_data = {
+        'page': page_obj.number,  # Current page
+        'num_pages': paginator.num_pages,  # Total number of pages
+        'has_next': page_obj.has_next(),  # Whether there's a next page
+        'has_previous': page_obj.has_previous(),  # Whether there's a previous page
+        'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None,
+        'previous_page_number': page_obj.previous_page_number() if page_obj.has_previous() else None
+    }
+    return JsonResponse({'posts': posts, 'pagination': pagination_data}, safe=False)
 
 @login_required
 def api_posts(request):

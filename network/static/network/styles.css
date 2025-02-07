@@ -64,4 +64,8 @@ textarea {
     font-optical-sizing: auto;
     font-style: normal;
     font-weight: 500;
-  }
+}
+
+.pagination {
+    margin-top: 20px;
+}

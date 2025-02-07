@@ -14,6 +14,6 @@ urlpatterns = [
     # API Routes
     path("new_post", views.new_post, name="newpost"),
     path("posts", views.api_posts, name="posts"),
-    path("get_posts/<str:page>/<str:username>", views.get_posts, name="get_posts"),
+    path("get_posts/<str:page_name>/<str:username>", views.get_posts, name="get_posts"),
     path('api_profile', views.api_profile, name='api_profile')  # Profile without a username specified
 ]
