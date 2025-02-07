@@ -27,8 +27,9 @@ def index(request):
 
     return render(request, "network/index.html", {"form": form})
 
+@login_required
 def following(request, username):
-
+    
     return render(request, "network/following.html")
 
 
@@ -144,7 +145,6 @@ def get_posts(request, page_name, username):
     }
     return JsonResponse({'posts': posts, 'pagination': pagination_data}, safe=False)
 
-@login_required
 def api_posts(request):
     if not request.user.is_authenticated:
         return JsonResponse({"success": False, "message": "need to be logged in"}, status=401)
@@ -197,16 +197,18 @@ def profile(request, username):
         user = User.objects.get(username=username)
     except User.DoesNotExist:
         #if no user, just go back to index page
-        form = NewPost()
-        return render(request, "network/index.html", {"form": form})
-
-    #check if following user to render initial button
-    follow_check = Follower.objects.filter(follower=request.user, followed=user.id).exists()
-    button = ''
-    if follow_check:
-        button = 'Un-follow'
+        return render(request, "network/index.html", {"message": 'user does not exist'})
+    
+    #check if following user to render initial button, if logged in
+    if request.user.is_authenticated:
+        follow_check = Follower.objects.filter(follower=request.user, followed=user.id).exists()
+        button = ''
+        if follow_check:
+            button = 'Un-follow'
+        else:
+            button = 'Follow'
     else:
-        button = 'Follow'
+        button = False
 
     #get follower and follows counts
     following = Follower.objects.filter(follower=user.id).count()

@@ -3,7 +3,8 @@
 
 {% block body %}
 
-{% if user.is_authenticated %}
+<!-- only render form if no error message and logged in-->
+{% if user.is_authenticated and not message %}
     <div class="section">
         <h2>New Post</h2>
         <form id="newpost" method="post">
@@ -19,6 +20,7 @@
     <div class="section">
         <h2>All Posts</h2>
         <div id="allposts">
+            {{ message }}
         </div>
     </div>
 {% endblock %}

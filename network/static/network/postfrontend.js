@@ -118,6 +118,10 @@ function assemble_post(post, position = 'append') {
 
     //create event listener for like button
     like_button.addEventListener('click', () => {
+        if (!isLoggedIn){
+            alert('you need to log in');
+            return;
+        }
         fetch('/posts', { 
             method: "PUT", 
             headers: {
@@ -270,7 +274,7 @@ function pagination(pagination){
 
         page_change.append(previous);
     }
-    
+
     //create page numbers
     for (let i=1; i <= pagination.num_pages; i++){
         //holder list item
